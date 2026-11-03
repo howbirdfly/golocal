@@ -5,10 +5,17 @@ import HeroSection from './components/HeroSection.vue'
 import GeneratorForm from './components/GeneratorForm.vue'
 import ResultPanel from './components/ResultPanel.vue'
 import Toast from './components/Toast.vue'
-import { markets } from './data/markets'
+import { generatePlan } from './services/ai'
 
 const currentMarket = ref('jp')
 const generated = ref(false)
+const loading = ref(false)
+const generationError = ref('')
+const streamState = reactive({
+  characters: 0,
+  message: '',
+  preview: { cn: '', local: '' }
+})
 const result = reactive({
   title: '',
   sub: '',
@@ -26,7 +33,7 @@ function showToast(msg) {
   toast.msg = msg
   toast.show = true
   clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => (toast.show = false), 1600)
+  toastTimer = setTimeout(() => (toast.show = false), 2200)
 }
 
 async function copyText(text) {
@@ -43,20 +50,39 @@ async function copyText(text) {
   showToast('已复制到剪贴板')
 }
 
-function generate(form) {
-  const m = markets[currentMarket.value]
-  const product = form.product.trim() || '我们的产品'
-  const selling = form.selling.trim() || '优质产品与贴心体验'
-  const lead = m.copyLead[form.tone]
-  result.title = `${m.name}市场 · 本地化建议`
-  result.sub = `${product} · ${form.goal}`
-  result.cn = `${lead}\n\n${product}，${selling}。\n面向${form.audience}，围绕${form.goal}场景，建议以清晰、真实、有吸引力的方式介绍产品特色，邀请目标用户进一步了解。`
-  result.langLabel = m.language
-  result.local = m.phrases[form.tone]
-  result.risks = m.risks
-  result.riskText = m.risks.map((x, i) => `${i + 1}. ${x}`).join('\n')
-  result.tips = m.tips
-  generated.value = true
+async function generate(form) {
+  if (loading.value) return
+
+  loading.value = true
+  generationError.value = ''
+  streamState.characters = 0
+  streamState.message = ''
+  streamState.preview.cn = ''
+  streamState.preview.local = ''
+
+  try {
+    const plan = await generatePlan({
+      market: currentMarket.value,
+      ...form
+    }, {
+      onProgress(progress) {
+        streamState.characters = progress.characters || 0
+        streamState.message = progress.message || ''
+        streamState.preview.cn = progress.preview?.cn || ''
+        streamState.preview.local = progress.preview?.local || ''
+      }
+    })
+
+    Object.assign(result, plan)
+    result.riskText = plan.risks.map((item, index) => `${index + 1}. ${item}`).join('\n')
+    generated.value = true
+    showToast('AI 出海方案已生成')
+  } catch (error) {
+    generationError.value = error.message
+    showToast(error.message)
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -65,9 +91,14 @@ function generate(form) {
   <main class="wrap">
     <HeroSection />
     <section class="layout">
-      <GeneratorForm v-model:market="currentMarket" @generate="generate" />
+      <GeneratorForm
+        v-model:market="currentMarket"
+        :loading="loading"
+        :error="generationError"
+        @generate="generate"
+      />
       <div class="right-col">
-        <ResultPanel :result="result" :generated="generated" @copy="copyText" />
+        <ResultPanel :result="result" :generated="generated" :loading="loading" :stream="streamState" @copy="copyText" />
         <section class="panel" style="padding:18px 21px">
           <div style="display:flex;align-items:center;gap:12px">
             <div style="font-size:24px">💡</div>
@@ -83,7 +114,7 @@ function generate(form) {
     </section>
     <div class="footer">
       <span>GoLocal · 跨文化出海本地化助手</span>
-      <span>概念验证原型 · 规则模板驱动 · 离线可运行</span>
+      <span>AI 服务由平台安全接入 · 方案仅供初步参考</span>
     </div>
   </main>
   <Toast :show="toast.show" :msg="toast.msg" />

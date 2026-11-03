@@ -1,7 +1,12 @@
 <script setup>
 defineProps({
   result: { type: Object, required: true },
-  generated: { type: Boolean, default: false }
+  generated: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false },
+  stream: {
+    type: Object,
+    default: () => ({ characters: 0, message: '', preview: { cn: '', local: '' } })
+  }
 })
 const emit = defineEmits(['copy'])
 
@@ -14,17 +19,33 @@ function copy(text) {
   <section class="panel result-panel">
     <div class="result-head">
       <div><h2>本地化方案预览</h2><p>生成适配建议，让出海表达更贴近目标市场。</p></div>
-      <span class="tag">GOLOCAL STUDIO</span>
+      <span class="tag">GOLOCAL AI</span>
     </div>
-    <div v-if="!generated" class="empty">
+    <div v-if="loading" class="loading-state" aria-live="polite">
+      <div class="loading-orbit" aria-hidden="true"><span></span></div>
+      <b>{{ stream.message || 'AI 正在研究目标市场' }}</b>
+      <p v-if="!stream.preview?.cn && !stream.preview?.local">正在分析用户语境、文案语气与跨文化风险，通常需要十几秒。</p>
+      <div v-else class="stream-output">
+        <div v-if="stream.preview?.cn" class="stream-block">
+          <small>中文文案预览</small>
+          <div>{{ stream.preview.cn }}</div>
+        </div>
+        <div v-if="stream.preview?.local" class="stream-block">
+          <small>目标语言预览</small>
+          <div>{{ stream.preview.local }}</div>
+        </div>
+      </div>
+      <small v-if="stream.characters" class="stream-counter">{{ stream.characters }} 个字符已接收</small>
+    </div>
+    <div v-else-if="!generated" class="empty">
       <div class="empty-icon">✧</div>
       <b>你的出海方案将在这里呈现</b>
-      <p>先选择目标市场，填写产品信息，再点击左侧按钮。系统将生成营销文案建议、语言表达参考与文化风险检查清单。</p>
+      <p>先选择目标市场，填写产品信息与标签，再点击左侧按钮。AI 将生成本地化文案、目标语言参考与市场适配建议。</p>
     </div>
     <div v-else class="results show">
       <div class="result-banner">
         <div><strong>{{ result.title }}</strong><br><span>{{ result.sub }}</span></div>
-        <span class="tag">已生成方案</span>
+        <span class="tag">AI 已生成</span>
       </div>
       <div class="result-section">
         <div class="sec-title"><b>01 / 本地化中文文案</b><button class="copy" type="button" @click="copy(result.cn)">复制文案</button></div>
@@ -33,7 +54,7 @@ function copy(text) {
           <div class="lang">{{ result.langLabel }}</div>
           <div class="copy-text">{{ result.local }}</div>
         </div>
-        <div class="bottom-note">外语短句为展示用参考表达，正式发布前建议由目标市场母语者校对。</div>
+        <div class="bottom-note">外语短句由 AI 生成，正式发布前建议由目标市场母语者校对。</div>
       </div>
       <div class="result-section">
         <div class="sec-title"><b>02 / 跨文化风险提示</b><button class="copy" type="button" @click="copy(result.riskText)">复制提示</button></div>
@@ -46,12 +67,12 @@ function copy(text) {
       <div class="result-section">
         <div class="sec-title"><b>03 / 市场适配建议</b><small>可执行的下一步</small></div>
         <div class="tip-grid">
-          <div v-for="([title, text], i) in result.tips" :key="i" class="tip">
-            <b>{{ title }}</b>{{ text }}
+          <div v-for="(tip, i) in result.tips" :key="i" class="tip">
+            <b>{{ tip.title }}</b>{{ tip.text }}
           </div>
         </div>
       </div>
-      <div class="bottom-note">免责声明：结果由本地规则模板生成，仅用于创意演示与初步参考，不构成专业翻译、法律或市场准入意见。涉及商标、广告宣称、标签及当地法规时，请进行专业核验。</div>
+      <div class="bottom-note">免责声明：结果由 AI 生成，仅用于创意演示与初步参考，不构成专业翻译、法律或市场准入意见。涉及商标、广告宣称、标签及当地法规时，请进行专业核验。</div>
     </div>
   </section>
 </template>
@@ -268,4 +289,102 @@ function copy(text) {
     padding: 17px;
   }
 }
-</style>
+
+/* ---------- AI 生成中 ---------- */
+.loading-state {
+  min-height: 370px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+  color: var(--muted);
+}
+
+.loading-state b {
+  color: var(--ink);
+  font-size: 15px;
+  margin: 16px 0 7px;
+}
+
+.loading-state p {
+  max-width: 330px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.loading-orbit {
+  width: 58px;
+  height: 58px;
+  border: 1px solid #cfe2d5;
+  border-radius: 50%;
+  position: relative;
+  animation: spin 2.8s linear infinite;
+}
+
+.loading-orbit::before,
+.loading-orbit::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+}
+
+.loading-orbit::before {
+  width: 14px;
+  height: 14px;
+  background: var(--green);
+  left: 3px;
+  top: 7px;
+  box-shadow: 0 0 0 7px #e7f3eb;
+}
+
+.loading-orbit::after {
+  width: 8px;
+  height: 8px;
+  background: var(--lime);
+  right: 5px;
+  bottom: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.stream-output {
+  width: 100%;
+  max-width: 520px;
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+  text-align: left;
+}
+
+.stream-block {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcfb;
+  padding: 12px;
+}
+
+.stream-block small {
+  display: block;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.stream-block div {
+  color: #35443b;
+  font-size: 12px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.stream-counter {
+  margin-top: 12px;
+  color: #8a968f;
+  font-size: 10px;
+}</style>
