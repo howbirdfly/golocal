@@ -1,0 +1,18 @@
+[Unit]
+Description=GoLocal AI API
+After=network.target
+
+[Service]
+Type=simple
+User=golocal
+Group=golocal
+WorkingDirectory=/opt/golocal
+EnvironmentFile=/opt/golocal/.env
+ExecStart=/usr/bin/node /opt/golocal/server/standalone.mjs
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

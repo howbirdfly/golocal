@@ -1,6 +1,6 @@
 # GoLocal — 出海文化避雷与文案本地化助手
 
-面向出海团队的轻量化本地化辅助网页应用。选择日本、美国或泰国作为目标市场，填写产品信息，并通过可自由输入和组合的标签描述目标人群、营销目的与文案风格，即可生成本地化文案建议、跨文化风险提示与市场适配建议。
+面向出海团队的轻量化本地化辅助网页应用。输入任意目标国家或市场，填写产品信息，并通过可自由输入和组合的标签描述目标人群、营销目的与文案风格，即可生成本地化文案建议、跨文化风险提示与市场适配建议。
 
 基于 **Vue 3 + Vite** 构建，方案生成由 **Kimi（Moonshot）大模型 API** 提供。
 
@@ -56,7 +56,7 @@ npx vercel --prod
 
 ## 功能
 
-- 日本、美国、泰国三个目标市场切换
+- 自由输入任意目标国家或市场
 - 产品名称、卖点输入
 - 目标人群、营销目的、文案风格支持建议项选择和自由输入
 - SSE 流式展示生成进度和文案预览
@@ -76,7 +76,6 @@ npx vercel --prod
 │   ├── App.vue             # 根组件（状态管理与生成流程）
 │   ├── services/ai.js      # 前端 SSE 流读取与结果解析
 │   ├── styles/             # variables / base / layout 分层样式
-│   ├── data/markets.js     # 市场规则数据（日/美/泰）
 │   └── components/         # TopBar / HeroSection / GeneratorForm / ResultPanel / Toast / TagInput
 ├── .env.example            # 本地服务端环境变量示例
 ├── vercel.json             # Serverless Function 配置

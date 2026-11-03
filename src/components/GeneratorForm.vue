@@ -1,7 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import TagInput from './TagInput.vue'
-import { markets } from '../data/markets'
 
 const props = defineProps({
   market: { type: String, required: true },
@@ -9,10 +8,6 @@ const props = defineProps({
   error: { type: String, default: '' }
 })
 const emit = defineEmits(['update:market', 'generate'])
-
-const marketList = Object.entries(markets).map(([key, m]) => ({
-  key, flag: m.flag, name: m.name, english: m.english
-}))
 
 const suggestions = {
   audience: ['年轻消费者', '学生群体', '上班族', '家庭用户', '商务客户', '旅行者'],
@@ -30,13 +25,17 @@ const form = reactive({
 const localError = ref('')
 const generatedOnce = ref(false)
 const displayError = computed(() => props.error || localError.value)
-
-function selectMarket(key) {
-  emit('update:market', key)
-}
+const targetMarket = computed({
+  get: () => props.market,
+  set: (value) => emit('update:market', value)
+})
 
 function onGenerate() {
   localError.value = ''
+  if (!targetMarket.value.trim()) {
+    localError.value = '请输入目标国家或市场'
+    return
+  }
   if (!form.product.trim() || !form.selling.trim()) {
     localError.value = '请填写产品名称和产品卖点'
     return
@@ -61,20 +60,14 @@ function onGenerate() {
   <aside class="panel form-panel">
     <div class="panel-head"><h2>创建出海方案</h2><span class="step">STEP 01 / 02</span></div>
     <div class="field">
-      <label>选择目标市场</label>
-      <div class="market-grid">
-        <button
-          v-for="m in marketList"
-          :key="m.key"
-          class="market"
-          :class="{ active: market === m.key }"
-          type="button"
-          :disabled="loading"
-          @click="selectMarket(m.key)"
-        >
-          <span class="flag">{{ m.flag }}</span><b>{{ m.name }}</b><small>{{ m.english }}</small>
-        </button>
-      </div>
+      <label for="target-market">目标国家 / 市场 <span class="hint">支持任意国家或地区</span></label>
+      <input
+        id="target-market"
+        v-model="targetMarket"
+        :disabled="loading"
+        maxlength="50"
+        placeholder="例如：日本、德国、阿联酋"
+      >
     </div>
     <div class="field">
       <label for="product">产品 / 品牌名称</label>
@@ -164,50 +157,6 @@ label {
   color: #8a968f;
   font-weight: 400;
   margin-left: 5px;
-}
-
-/* ---------- 市场选择 ---------- */
-.market-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.market {
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  padding: 11px 6px;
-  text-align: center;
-  transition: 0.18s;
-  color: var(--ink);
-}
-
-.market:hover {
-  border-color: #8bb7a0;
-  transform: translateY(-1px);
-}
-
-.market.active {
-  border: 2px solid var(--green);
-  background: #f1f8f3;
-  padding: 10px 5px;
-}
-
-.flag {
-  font-size: 25px;
-  display: block;
-  margin-bottom: 5px;
-}
-
-.market b {
-  font-size: 12px;
-  display: block;
-}
-
-.market small {
-  font-size: 10px;
-  color: var(--muted);
 }
 
 /* ---------- 输入控件 ---------- */

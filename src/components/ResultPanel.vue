@@ -40,7 +40,7 @@ function copy(text) {
     <div v-else-if="!generated" class="empty">
       <div class="empty-icon">✧</div>
       <b>你的出海方案将在这里呈现</b>
-      <p>先选择目标市场，填写产品信息与标签，再点击左侧按钮。AI 将生成本地化文案、目标语言参考与市场适配建议。</p>
+      <p>先输入目标国家或市场，填写产品信息与标签，再点击左侧按钮。AI 将生成本地化文案、目标语言参考与市场适配建议。</p>
     </div>
     <div v-else class="results show">
       <div class="result-banner">
