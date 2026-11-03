@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoLocal — 出海本地化助手</title>
+<style>
+:root{
+  --ink:#17211d;--muted:#69766f;--line:#e7ebe7;--bg:#f5f7f4;--card:#fff;
+  --green:#176b52;--green2:#e8f4ee;--lime:#d9ef83;--orange:#f2a65a;
+  --shadow:0 14px 38px rgba(25,48,37,.08);--radius:20px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Microsoft YaHei","PingFang SC",Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1180px)/2));position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:21px;letter-spacing:-.5px}
+.logo{width:38px;height:38px;border-radius:13px;background:var(--green);display:grid;place-items:center;color:#fff;font-size:20px}
+.brand small{display:block;font-size:10px;letter-spacing:1.5px;color:#829087;font-weight:700;margin-top:1px}
+.top-right{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:9px}
+.pulse{width:8px;height:8px;background:#55ae7a;border-radius:50%;box-shadow:0 0 0 4px #e9f5ed}
+.wrap{max-width:1180px;margin:0 auto;padding:38px 24px 60px}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:center;margin-bottom:28px}
+.eyebrow{color:var(--green);font-size:12px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase}
+h1{font-size:clamp(32px,4vw,48px);line-height:1.12;letter-spacing:-1.8px;margin:13px 0 14px}
+h1 span{color:var(--green)}
+.hero p{color:var(--muted);font-size:15px;line-height:1.9;max-width:610px;margin:0}
+.hero-art{min-height:205px;border-radius:26px;background:#e8f0e8;position:relative;overflow:hidden;padding:24px;display:flex;align-items:flex-end;justify-content:space-between}
+.hero-art:before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:#c8e1cb;right:50px;top:-100px}
+.hero-art:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;background:#d9ef83;right:-20px;bottom:-65px}
+.globe{position:absolute;right:54px;top:24px;font-size:96px;filter:drop-shadow(0 10px 10px #78957c55)}
+.art-label{position:relative;z-index:1;background:#fff;padding:12px 15px;border-radius:14px;font-size:12px;line-height:1.6;box-shadow:var(--shadow)}
+.art-label b{display:block;font-size:14px}
+.stats{display:flex;gap:20px;margin-top:22px;flex-wrap:wrap}
+.stat{font-size:12px;color:var(--muted)}.stat b{color:var(--ink);font-size:17px;margin-right:5px}
+.layout{display:grid;grid-template-columns:390px 1fr;gap:22px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.form-panel{padding:23px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.panel-head h2{font-size:18px;margin:0}
+.step{font-size:11px;color:var(--green);background:var(--green2);padding:6px 10px;border-radius:30px;font-weight:800}
+.field{margin-bottom:18px}
+label{display:block;font-size:13px;font-weight:750;margin-bottom:9px}
+.hint{font-size:11px;color:#8a968f;font-weight:400;margin-left:5px}
+.market-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.market{border:1px solid var(--line);border-radius:14px;background:#fff;padding:11px 6px;text-align:center;transition:.18s;color:var(--ink)}
+.market:hover{border-color:#8bb7a0;transform:translateY(-1px)}
+.market.active{border:2px solid var(--green);background:#f1f8f3;padding:10px 5px}
+.flag{font-size:25px;display:block;margin-bottom:5px}
+.market b{font-size:12px;display:block}.market small{font-size:10px;color:var(--muted)}
+input,select,textarea{width:100%;border:1px solid #dfe6e0;border-radius:11px;padding:12px 13px;background:#fbfcfb;color:var(--ink);outline:none;font-size:13px;transition:.15s}
+input:focus,select:focus,textarea:focus{border-color:#6fa68a;box-shadow:0 0 0 3px #e7f3eb}
+textarea{resize:vertical;min-height:75px;line-height:1.6}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.primary{width:100%;border:0;background:var(--green);color:#fff;border-radius:12px;padding:14px;font-weight:800;font-size:14px;box-shadow:0 8px 18px #176b5225;transition:.18s}
+.primary:hover{background:#105840;transform:translateY(-1px)}
+.secondary{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 12px;font-size:12px;font-weight:700}
+.right-col{display:grid;gap:18px}
+.result-panel{padding:23px;min-height:500px}
+.result-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.result-head h2{font-size:18px;margin:0 0 5px}
+.result-head p{font-size:12px;color:var(--muted);margin:0}
+.tag{font-size:10px;background:#f0f4ef;color:#63746a;padding:7px 10px;border-radius:30px;white-space:nowrap}
+.empty{min-height:370px;border:1px dashed #d5ded6;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:25px;color:var(--muted)}
+.empty-icon{width:66px;height:66px;border-radius:22px;background:#eef5ef;display:grid;place-items:center;font-size:31px;margin-bottom:14px}
+.empty b{color:var(--ink);font-size:15px;margin-bottom:7px}
+.empty p{font-size:12px;line-height:1.8;max-width:310px;margin:0}
+.results{display:none}
+.result-banner{background:#eff6ef;border-radius:15px;padding:15px 17px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.result-banner strong{font-size:14px}.result-banner span{font-size:11px;color:var(--muted)}
+.result-section{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-title b{font-size:13px}.sec-title small{color:var(--muted);font-size:10px}
+.copy{border:0;background:#edf5ef;color:var(--green);font-size:10px;font-weight:800;border-radius:8px;padding:7px 10px}
+.copy:hover{background:#dceee1}
+.copy-text{font-size:13px;line-height:1.85;white-space:pre-wrap;color:#35443b}
+.localized{background:#f8faf8;border-radius:10px;padding:12px;margin-top:10px}
+.localized .lang{font-size:10px;color:var(--muted);font-weight:800;margin-bottom:5px}
+.risk-list{display:grid;gap:9px}
+.risk{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.7;color:#46544b}
+.dot{width:7px;height:7px;border-radius:50%;background:#e4a24d;flex:none;margin-top:7px}
+.tip-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tip{background:#f7f9f7;border-radius:10px;padding:11px;font-size:11px;line-height:1.7;color:#58665d}
+.tip b{display:block;color:#26372d;font-size:11px;margin-bottom:3px}
+.bottom-note{font-size:10px;line-height:1.7;color:#87938b;margin-top:14px}
+.footer{margin-top:25px;display:flex;justify-content:space-between;gap:15px;color:#87938b;font-size:11px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;background:#172a20;color:white;padding:11px 17px;border-radius:30px;font-size:12px;transition:.25s;z-index:10;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:850px){.hero{grid-template-columns:1fr}.hero-art{min-height:160px}.layout{grid-template-columns:1fr}.form-panel{order:1}.right-col{order:2}}
+@media(max-width:520px){.wrap{padding:24px 14px 40px}.topbar{padding:0 15px}.top-right{font-size:10px}.form-panel,.result-panel{padding:17px}.two{grid-template-columns:1fr}.footer{flex-direction:column}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="logo">G</div><div>GoLocal<small>GO GLOBAL, STAY LOCAL</small></div></div>
+  <div class="top-right"><span class="pulse"></span> 本地演示版 · 无需 API · 免费使用</div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">LOCALIZATION MADE SIMPLE</div>
+      <h1>让中国品牌，<br><span>更自然地走向世界。</span></h1>
+      <p>面向出海团队的轻量化本地化助手。选择目标市场，生成营销表达建议，并快速检查跨文化沟通中值得留意的风险。</p>
+      <div class="stats">
+        <div class="stat"><b>03</b>目标市场示例</div>
+        <div class="stat"><b>03</b>核心辅助模块</div>
+        <div class="stat"><b>0</b>API 成本</div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="globe">🌏</div>
+      <div class="art-label"><b>从本地理解开始</b>语言适配 · 文化提示 · 出海表达</div>
+    </div>
+  </section>
+
+  <section class="layout">
+    <aside class="panel form-panel">
+      <div class="panel-head"><h2>创建出海方案</h2><span class="step">STEP 01 / 02</span></div>
+      <div class="field">
+        <label>选择目标市场</label>
+        <div class="market-grid">
+          <button class="market active" data-market="jp" type="button"><span class="flag">🇯🇵</span><b>日本</b><small>Japan</small></button>
+          <button class="market" data-market="us" type="button"><span class="flag">🇺🇸</span><b>美国</b><small>United States</small></button>
+          <button class="market" data-market="th" type="button"><span class="flag">🇹🇭</span><b>泰国</b><small>Thailand</small></button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="product">产品 / 品牌名称</label>
+        <input id="product" value="中国风味奶茶" placeholder="例如：中国风味奶茶">
+      </div>
+      <div class="field">
+        <label for="selling">产品卖点 <span class="hint">用一句话描述</span></label>
+        <textarea id="selling" placeholder="例如：精选茶叶、口感清爽、提供多种口味">精选茶叶，口感清爽，提供多种创新口味</textarea>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="audience">目标人群</label>
+          <select id="audience">
+            <option>年轻消费者</option><option>学生群体</option><option>上班族</option><option>家庭用户</option><option>商务客户</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="goal">营销目的</label>
+          <select id="goal">
+            <option>新品上市</option><option>品牌推广</option><option>节日营销</option><option>门店引流</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="tone">文案风格</label>
+        <select id="tone">
+          <option value="warm">温暖亲切</option><option value="simple">简洁专业</option><option value="young">年轻活泼</option>
+        </select>
+      </div>
+      <button class="primary" id="generate">✦ 生成本地化出海方案</button>
+      <div class="bottom-note">提示：本演示版使用内置规则与文案模板生成结果，不调用外部 AI 服务，不上传输入内容。</div>
+    </aside>
+
+    <div class="right-col">
+      <section class="panel result-panel">
+        <div class="result-head">
+          <div><h2>本地化方案预览</h2><p>生成适配建议，让出海表达更贴近目标市场。</p></div>
+          <span class="tag">GOLOCAL STUDIO</span>
+        </div>
+        <div class="empty" id="empty">
+          <div class="empty-icon">✧</div>
+          <b>你的出海方案将在这里呈现</b>
+          <p>先选择目标市场，填写产品信息，再点击左侧按钮。系统将生成营销文案建议、语言表达参考与文化风险检查清单。</p>
+        </div>
+        <div class="results" id="results">
+          <div class="result-banner"><div><strong id="resultTitle">日本市场 · 本地化建议</strong><br><span id="resultSub">中国风味奶茶 · 新品上市</span></div><span class="tag">已生成方案</span></div>
+          <div class="result-section">
+            <div class="sec-title"><b>01 / 本地化中文文案</b><button class="copy" data-copy="copyCn">复制文案</button></div>
+            <div class="copy-text" id="copyCn"></div>
+            <div class="localized">
+              <div class="lang" id="langLabel">日语表达参考 · 示例短句</div>
+              <div class="copy-text" id="copyLocal"></div>
+            </div>
+            <div class="bottom-note">外语短句为展示用参考表达，正式发布前建议由目标市场母语者校对。</div>
+          </div>
+          <div class="result-section">
+            <div class="sec-title"><b>02 / 跨文化风险提示</b><button class="copy" data-copy="riskCopy">复制提示</button></div>
+            <div class="risk-list" id="riskList"></div>
+            <div id="riskCopy" style="display:none"></div>
+          </div>
+          <div class="result-section">
+            <div class="sec-title"><b>03 / 市场适配建议</b><small>可执行的下一步</small></div>
+            <div class="tip-grid" id="tipGrid"></div>
+          </div>
+          <div class="bottom-note">免责声明：结果由本地规则模板生成，仅用于创意演示与初步参考，不构成专业翻译、法律或市场准入意见。涉及商标、广告宣称、标签及当地法规时，请进行专业核验。</div>
+        </div>
+      </section>
+      <section class="panel" style="padding:18px 21px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:24px">💡</div>
+          <div><b style="font-size:13px">为什么需要本地化？</b><div style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:4px">出海不只是把文字翻译成另一种语言，更要考虑目标用户的语境、文化习惯与当地市场要求。</div></div>
+        </div>
+      </section>
+    </div>
+  </section>
+  <div class="footer"><span>GoLocal · 跨文化出海本地化助手</span><span>概念验证原型 · 规则模板驱动 · 离线可运行</span></div>
+</main>
+<div class="toast" id="toast">已复制到剪贴板</div>
+
+<script>
+const markets = {
+  jp: {
+    name:"日本", english:"Japan", flag:"🇯🇵", language:"日语表达参考 · 示例短句",
+    phrases:{
+      warm:"新しいおいしさで、毎日に小さな楽しみを。",
+      simple:"こだわりのお茶を、毎日の一杯に。",
+      young:"今日の気分に、新しいおいしさを！"
+    },
+    copyLead:{
+      warm:"为日常增添一份温柔的小惊喜。",
+      simple:"精选好茶，呈现自然风味。",
+      young:"今天，也来尝点不一样的！"
+    },
+    risks:[
+      "避免将直译后的中文口号直接用于正式广告；建议由日语母语者检查语气、敬语和自然度。",
+      "涉及原料、产地、健康或功效的描述，应准备可核验依据，避免夸大或绝对化表达。",
+      "食品包装、配料、过敏原及进口销售要求需要按当地最新规定另行核验。"
+    ],
+    tips:[
+      ["表达方式","优先使用简洁、礼貌、信息清晰的表达。"],
+      ["视觉呈现","确保颜色、图案和字体在当地语境中易于理解。"],
+      ["产品信息","突出原料、口味与规格等消费者关心的信息。"],
+      ["上线前检查","请当地语言人员及合规人员共同审校。"]
+    ]
+  },
+  us: {
+    name:"美国", english:"United States", flag:"🇺🇸", language:"英语表达参考 · 示例短句",
+    phrases:{
+      warm:"A little moment of flavor, made for your day.",
+      simple:"Discover a fresh take on tea.",
+      young:"Your next favorite sip starts here!"
+    },
+    copyLead:{
+      warm:"给忙碌的日常，留一点轻松享受的时间。",
+      simple:"以清晰的产品特色，传递自然风味。",
+      young:"发现你的下一款心头好！"
+    },
+    risks:[
+      "避免使用“最好”“绝对有效”“百分之百”等难以证明的宣传表述；重要产品主张应有证据支持。",
+      "价格、折扣、用户评价和产品效果等信息应真实、清晰，避免造成误导。",
+      "如收集用户个人信息或开展线上营销，应核验适用的隐私与广告规则。"
+    ],
+    tips:[
+      ["表达方式","突出具体利益点，句子简洁直接。"],
+      ["产品信息","清楚说明规格、价格、成分及购买方式。"],
+      ["营销素材","使用真实产品图片，避免效果夸大。"],
+      ["上线前检查","核对广告主张、隐私说明及平台规则。"]
+    ]
+  },
+  th: {
+    name:"泰国", english:"Thailand", flag:"🇹🇭", language:"泰语表达参考 · 示例短句",
+    phrases:{
+      warm:"เติมความสดชื่นให้ทุกวันของคุณ",
+      simple:"ชารสชาติดี สำหรับทุกวันของคุณ",
+      young:"ลองรสชาติใหม่ ๆ ที่คุณอาจหลงรัก!"
+    },
+    copyLead:{
+      warm:"让清爽好滋味，为日常带来轻松好心情。",
+      simple:"以清晰的产品信息，呈现茶饮特色。",
+      young:"来发现一款让你惊喜的新口味！"
+    },
+    risks:[
+      "泰语表达应由熟悉当地语境的人员校对，避免仅依赖逐字翻译。",
+      "使用宗教、王室、传统节庆或地方文化元素时，应先确认使用方式是否恰当并获得必要授权。",
+      "食品成分、标签、进口和广告要求需根据实际销售渠道及当地最新规定核验。"
+    ],
+    tips:[
+      ["表达方式","使用自然、易懂的泰语，并请当地人员审校。"],
+      ["视觉呈现","谨慎使用宗教及传统文化符号。"],
+      ["产品信息","让配料、口味、规格等信息清楚易读。"],
+      ["上线前检查","通过当地合作方确认渠道和合规要求。"]
+    ]
+  }
+};
+let currentMarket = "jp";
+document.querySelectorAll(".market").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    currentMarket=btn.dataset.market;
+    document.querySelectorAll(".market").forEach(x=>x.classList.toggle("active",x===btn));
+  });
+});
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function generate(){
+  const product=document.getElementById("product").value.trim()||"我们的产品";
+  const selling=document.getElementById("selling").value.trim()||"优质产品与贴心体验";
+  const audience=document.getElementById("audience").value;
+  const goal=document.getElementById("goal").value;
+  const tone=document.getElementById("tone").value;
+  const m=markets[currentMarket];
+  const lead=m.copyLead[tone];
+  const cn=`${lead}\n\n${product}，${selling}。\n面向${audience}，围绕${goal}场景，建议以清晰、真实、有吸引力的方式介绍产品特色，邀请目标用户进一步了解。`;
+  document.getElementById("resultTitle").textContent=`${m.name}市场 · 本地化建议`;
+  document.getElementById("resultSub").textContent=`${product} · ${goal}`;
+  document.getElementById("copyCn").textContent=cn;
+  document.getElementById("langLabel").textContent=m.language;
+  document.getElementById("copyLocal").textContent=m.phrases[tone];
+  const riskList=document.getElementById("riskList");
+  riskList.innerHTML=m.risks.map(x=>`<div class="risk"><span class="dot"></span><span>${escapeHTML(x)}</span></div>`).join("");
+  document.getElementById("riskCopy").textContent=m.risks.map((x,i)=>`${i+1}. ${x}`).join("\n");
+  document.getElementById("tipGrid").innerHTML=m.tips.map(([a,b])=>`<div class="tip"><b>${escapeHTML(a)}</b>${escapeHTML(b)}</div>`).join("");
+  document.getElementById("empty").style.display="none";
+  document.getElementById("results").style.display="block";
+  document.getElementById("generate").textContent="✓ 重新生成方案";
+}
+document.getElementById("generate").addEventListener("click",generate);
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1600);}
+async function copyText(text){
+  try{await navigator.clipboard.writeText(text);showToast("已复制到剪贴板");}
+  catch(e){const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();showToast("已复制到剪贴板");}
+}
+document.querySelectorAll("[data-copy]").forEach(btn=>btn.addEventListener("click",()=>{
+  const id=btn.dataset.copy;
+  const el=document.getElementById(id);
+  copyText(el.innerText||el.textContent);
+}));
+</script>
+</body>
+</html>
