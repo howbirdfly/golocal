@@ -7,7 +7,7 @@ import ResultPanel from './components/ResultPanel.vue'
 import Toast from './components/Toast.vue'
 import { generatePlan } from './services/ai'
 
-const currentMarket = ref('jp')
+const currentMarket = ref('日本')
 const generated = ref(false)
 const loading = ref(false)
 const generationError = ref('')

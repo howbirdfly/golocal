@@ -1,7 +1,6 @@
 import http from 'node:http'
 import https from 'node:https'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import { markets } from '../src/data/markets.js'
 
 const DEFAULT_MODEL = 'kimi-k3.1-pro-highspeed'
 const DEFAULT_BASE_URL = 'https://api.moonshot.cn/v1'
@@ -252,10 +251,10 @@ function normalizePlan(plan) {
   }
 }
 
-function buildUserPrompt(payload, market) {
+function buildUserPrompt(payload) {
   return `请为以下品牌需求生成一份可执行的出海本地化方案。
 
-目标市场：${market.name}（${market.english}）
+目标市场：${payload.market}
 产品 / 品牌名称：${payload.product}
 产品卖点：${payload.selling}
 目标人群标签：${payload.audience.join('、')}
@@ -313,16 +312,15 @@ export function createAiProxyHandler(env = {}) {
 
     try {
       const payload = await readJsonBody(req)
-      const marketKey = cleanText(payload.market, 10).toLowerCase()
-      const market = markets[marketKey]
+      const targetMarket = cleanText(payload.market, 80)
 
-      if (!market) {
-        sendFailure(400, '请选择有效的目标市场')
+      if (!targetMarket) {
+        sendFailure(400, '请输入目标国家或市场')
         return
       }
 
       const normalized = {
-        market: marketKey,
+        market: targetMarket,
         product: cleanText(payload.product, 120),
         selling: cleanText(payload.selling, 800),
         audience: cleanTags(payload.audience),
@@ -362,7 +360,7 @@ export function createAiProxyHandler(env = {}) {
         model,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserPrompt(normalized, market) }
+          { role: 'user', content: buildUserPrompt(normalized) }
         ],
         response_format: { type: 'json_object' },
         max_tokens: maxTokens,
