@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:cloudbase": "node scripts/build-cloudbase.mjs"
   },
   "dependencies": {
     "https-proxy-agent": "^7.0.6",

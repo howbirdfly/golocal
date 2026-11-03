@@ -30,7 +30,15 @@ export async function generatePlan(payload, { onProgress } = {}) {
   }
 
   const contentType = response.headers.get('content-type') || ''
-  if (!response.ok || !contentType.includes('text/event-stream')) {
+
+  // 云函数等环境不支持流式，会直接返回完整 JSON，这里做兼容
+  if (!contentType.includes('text/event-stream')) {
+    const data = await response.json().catch(() => null)
+    if (response.ok && data?.result) return data.result
+    throw new Error(data?.error || `AI 方案生成失败（${response.status}）`)
+  }
+
+  if (!response.ok) {
     const data = await response.json().catch(() => null)
     throw new Error(data?.error || `AI 方案生成失败（${response.status}）`)
   }
