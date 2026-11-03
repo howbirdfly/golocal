@@ -1,9 +1,12 @@
 <script setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
+import TagInput from './TagInput.vue'
 import { markets } from '../data/markets'
 
 const props = defineProps({
-  market: { type: String, required: true }
+  market: { type: String, required: true },
+  loading: { type: Boolean, default: false },
+  error: { type: String, default: '' }
 })
 const emit = defineEmits(['update:market', 'generate'])
 
@@ -11,22 +14,46 @@ const marketList = Object.entries(markets).map(([key, m]) => ({
   key, flag: m.flag, name: m.name, english: m.english
 }))
 
+const suggestions = {
+  audience: ['年轻消费者', '学生群体', '上班族', '家庭用户', '商务客户', '旅行者'],
+  goal: ['新品上市', '品牌推广', '节日营销', '门店引流', '社媒种草', '复购提升'],
+  tone: ['温暖亲切', '简洁专业', '年轻活泼', '高端克制', '幽默轻松', '真诚可信']
+}
+
 const form = reactive({
   product: '中国风味奶茶',
   selling: '精选茶叶，口感清爽，提供多种创新口味',
-  audience: '年轻消费者',
-  goal: '新品上市',
-  tone: 'warm'
+  audience: ['年轻消费者'],
+  goal: ['新品上市'],
+  tone: ['温暖亲切']
 })
+const localError = ref('')
 const generatedOnce = ref(false)
+const displayError = computed(() => props.error || localError.value)
 
 function selectMarket(key) {
   emit('update:market', key)
 }
 
 function onGenerate() {
+  localError.value = ''
+  if (!form.product.trim() || !form.selling.trim()) {
+    localError.value = '请填写产品名称和产品卖点'
+    return
+  }
+  if (!form.audience.length || !form.goal.length || !form.tone.length) {
+    localError.value = '请至少选择一个目标人群、营销目的和文案风格标签'
+    return
+  }
+
   generatedOnce.value = true
-  emit('generate', { ...form })
+  emit('generate', {
+    product: form.product,
+    selling: form.selling,
+    audience: [...form.audience],
+    goal: [...form.goal],
+    tone: [...form.tone]
+  })
 }
 </script>
 
@@ -42,6 +69,7 @@ function onGenerate() {
           class="market"
           :class="{ active: market === m.key }"
           type="button"
+          :disabled="loading"
           @click="selectMarket(m.key)"
         >
           <span class="flag">{{ m.flag }}</span><b>{{ m.name }}</b><small>{{ m.english }}</small>
@@ -50,34 +78,46 @@ function onGenerate() {
     </div>
     <div class="field">
       <label for="product">产品 / 品牌名称</label>
-      <input id="product" v-model="form.product" placeholder="例如：中国风味奶茶">
+      <input id="product" v-model="form.product" :disabled="loading" placeholder="例如：中国风味奶茶">
     </div>
     <div class="field">
       <label for="selling">产品卖点 <span class="hint">用一句话描述</span></label>
-      <textarea id="selling" v-model="form.selling" placeholder="例如：精选茶叶、口感清爽、提供多种口味"></textarea>
-    </div>
-    <div class="two">
-      <div class="field">
-        <label for="audience">目标人群</label>
-        <select id="audience" v-model="form.audience">
-          <option>年轻消费者</option><option>学生群体</option><option>上班族</option><option>家庭用户</option><option>商务客户</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="goal">营销目的</label>
-        <select id="goal" v-model="form.goal">
-          <option>新品上市</option><option>品牌推广</option><option>节日营销</option><option>门店引流</option>
-        </select>
-      </div>
+      <textarea id="selling" v-model="form.selling" :disabled="loading" placeholder="例如：精选茶叶、口感清爽、提供多种口味"></textarea>
     </div>
     <div class="field">
-      <label for="tone">文案风格</label>
-      <select id="tone" v-model="form.tone">
-        <option value="warm">温暖亲切</option><option value="simple">简洁专业</option><option value="young">年轻活泼</option>
-      </select>
+      <label for="audience">目标人群 <span class="hint">可选择或直接输入</span></label>
+      <TagInput
+        input-id="audience"
+        v-model="form.audience"
+        :suggestions="suggestions.audience"
+        placeholder="例如：露营爱好者，按 Enter 添加"
+      />
     </div>
-    <button class="primary" type="button" @click="onGenerate">{{ generatedOnce ? '✓ 重新生成方案' : '✦ 生成本地化出海方案' }}</button>
-    <div class="bottom-note">提示：本演示版使用内置规则与文案模板生成结果，不调用外部 AI 服务，不上传输入内容。</div>
+    <div class="field">
+      <label for="goal">营销目的 <span class="hint">可多选</span></label>
+      <TagInput
+        input-id="goal"
+        v-model="form.goal"
+        :suggestions="suggestions.goal"
+        placeholder="例如：新品首发，按 Enter 添加"
+      />
+    </div>
+    <div class="field">
+      <label for="tone">文案风格 <span class="hint">可自定义语气</span></label>
+      <TagInput
+        input-id="tone"
+        v-model="form.tone"
+        :suggestions="suggestions.tone"
+        placeholder="例如：克制高级，按 Enter 添加"
+      />
+    </div>
+
+    <p v-if="displayError" class="form-error" role="alert">{{ displayError }}</p>
+    <button class="primary" type="button" :disabled="loading" @click="onGenerate">
+      <span v-if="loading" class="spinner" aria-hidden="true"></span>
+      {{ loading ? 'AI 正在生成方案…' : generatedOnce ? '✦ 重新生成 AI 方案' : '✦ 生成 AI 出海方案' }}
+    </button>
+    <div class="bottom-note">AI 服务已由平台安全接入，无需填写 API Key。结果仅用于创意演示与初步参考。</div>
   </aside>
 </template>
 
@@ -223,15 +263,6 @@ textarea {
   transform: translateY(-1px);
 }
 
-.secondary {
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--ink);
-  border-radius: 10px;
-  padding: 9px 12px;
-  font-size: 12px;
-  font-weight: 700;
-}
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 520px) {
@@ -242,5 +273,39 @@ textarea {
   .two {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---------- 加载状态与按钮 ---------- */
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+  transform: none !important;
+}
+
+.form-error {
+  margin: 0 0 12px;
+  border: 1px solid #f0ceca;
+  background: #fff4f2;
+  color: #9c4038;
+  border-radius: 10px;
+  padding: 10px 11px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff66;
+  border-top-color: #fff;
+  border-radius: 50%;
+  vertical-align: -2px;
+  margin-right: 5px;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>
