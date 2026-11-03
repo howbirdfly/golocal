@@ -3,9 +3,10 @@ import https from 'node:https'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { markets } from '../src/data/markets.js'
 
-const DEFAULT_MODEL = 'deepseek-flash'
-const DEFAULT_BASE_URL = 'https://api.deepseek.com'
-const DEFAULT_MAX_TOKENS = 6000
+const DEFAULT_MODEL = 'kimi-k3.1-pro-highspeed'
+const DEFAULT_BASE_URL = 'https://api.moonshot.cn/v1'
+const DEFAULT_PROVIDER_NAME = 'Kimi'
+const DEFAULT_MAX_TOKENS = 8000
 const MAX_BODY_BYTES = 64 * 1024
 const MODEL_PATTERN = /^[a-zA-Z0-9._:-]{2,80}$/
 
@@ -129,19 +130,20 @@ function extractPartialString(text, key) {
 }
 
 function readApiKey(env) {
-  return cleanText(env.DEEPSEEK_API_KEY, 300).replace(/^Bearer\s+/i, '')
+  const key = readEnv(env, 'LLM_API_KEY') || readEnv(env, 'DEEPSEEK_API_KEY')
+  return cleanText(key, 300).replace(/^Bearer\s+/i, '')
 }
 
 function readEnv(env, key) {
   return env?.[key] || process.env?.[key] || ''
 }
 
-function requestDeepSeek(urlString, body, headers, env, handlers = {}) {
+function requestUpstream(urlString, body, headers, env, handlers = {}) {
   return new Promise((resolve, reject) => {
     const url = new URL(urlString)
     const isLocalTestUrl = url.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(url.hostname)
     if (url.protocol !== 'https:' && !isLocalTestUrl) {
-      reject(new Error('DeepSeek 服务地址必须使用 HTTPS'))
+      reject(new Error('AI 服务地址必须使用 HTTPS'))
       return
     }
 
@@ -184,6 +186,13 @@ function requestDeepSeek(urlString, body, headers, env, handlers = {}) {
           if (!event) continue
           const choice = event.choices?.[0]
           if (choice?.finish_reason) finishReason = choice.finish_reason
+
+          // 推理模型会先流式输出 reasoning_content，这段不计入正文
+          const reasoning = choice?.delta?.reasoning_content
+          if (typeof reasoning === 'string' && reasoning) {
+            handlers.onReasoning?.(reasoning)
+          }
+
           const delta = choice?.delta?.content
           if (typeof delta === 'string' && delta) {
             outputText += delta
@@ -210,7 +219,7 @@ function requestDeepSeek(urlString, body, headers, env, handlers = {}) {
       })
     })
 
-    request.setTimeout(60000, () => request.destroy(new Error('DeepSeek 服务请求超时')))
+    request.setTimeout(60000, () => request.destroy(new Error('AI 服务请求超时')))
     request.on('error', reject)
     request.end(body)
   })
@@ -328,17 +337,26 @@ export function createAiProxyHandler(env = {}) {
 
       const apiKey = readApiKey(env)
       if (!apiKey) {
-        sendFailure(503, '服务端尚未配置 DEEPSEEK_API_KEY，请在部署平台的环境变量中添加后重新部署。')
+        sendFailure(503, '服务端尚未配置 LLM_API_KEY，请在部署平台的环境变量中添加后重新部署。')
         return
       }
 
-      const configuredModel = cleanText(env.DEEPSEEK_MODEL, 80)
+      // 兼容 LLM_* 与旧版 DEEPSEEK_* 变量名；默认指向 Moonshot（Kimi）
+      const readOption = (name) => readEnv(env, `LLM_${name}`) || readEnv(env, `DEEPSEEK_${name}`)
+      const providerName = cleanText(readOption('PROVIDER_NAME'), 20) || DEFAULT_PROVIDER_NAME
+      const configuredModel = cleanText(readOption('MODEL'), 80)
       const model = MODEL_PATTERN.test(configuredModel) ? configuredModel : DEFAULT_MODEL
-      const baseUrl = (cleanText(env.DEEPSEEK_BASE_URL, 300) || DEFAULT_BASE_URL).replace(/\/+$/, '')
-      const configuredMaxTokens = Number.parseInt(readEnv(env, 'DEEPSEEK_MAX_TOKENS'), 10)
+      const baseUrl = (cleanText(readOption('BASE_URL'), 300) || DEFAULT_BASE_URL).replace(/\/+$/, '')
+      const configuredMaxTokens = Number.parseInt(readOption('MAX_TOKENS'), 10)
       const maxTokens = Number.isFinite(configuredMaxTokens)
         ? Math.min(Math.max(configuredMaxTokens, 2000), 8000)
         : DEFAULT_MAX_TOKENS
+
+      // 推理模型（如 kimi-k3 系列）只接受默认 temperature，未显式配置时不传该字段
+      const configuredTemperature = Number.parseFloat(readOption('TEMPERATURE'))
+      const temperature = Number.isFinite(configuredTemperature)
+        ? Math.min(Math.max(configuredTemperature, 0), 2)
+        : null
 
       const requestBody = JSON.stringify({
         model,
@@ -348,11 +366,11 @@ export function createAiProxyHandler(env = {}) {
         ],
         response_format: { type: 'json_object' },
         max_tokens: maxTokens,
-        temperature: 0.6,
+        ...(temperature === null ? {} : { temperature }),
         stream: true
       })
 
-      const upstream = await requestDeepSeek(`${baseUrl}/chat/completions`, requestBody, {
+      const upstream = await requestUpstream(`${baseUrl}/chat/completions`, requestBody, {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       }, env, {
@@ -363,28 +381,40 @@ export function createAiProxyHandler(env = {}) {
           writeSse(res, 'progress', {
             characters: 0,
             preview: { cn: '', local: '' },
-            message: 'DeepSeek 已连接，正在生成方案…'
+            message: `${providerName} 已连接，正在生成方案…`
           })
         },
         onDelta(_delta, outputText) {
           emitProgress(outputText)
+        },
+        onReasoning() {
+          // 推理阶段正文还没开始，用轻量提示让前端知道仍在工作
+          if (!wantsStream || !streamStarted) return
+          const now = Date.now()
+          if (now - lastProgressAt < 800) return
+          lastProgressAt = now
+          writeSse(res, 'progress', {
+            characters: 0,
+            preview: { cn: '', local: '' },
+            message: `${providerName} 正在思考并组织文案…`
+          })
         }
       })
 
       if (!upstream.ok) {
         const data = parseMaybeJson(upstream.raw)
-        const message = data?.error?.message || `DeepSeek 服务请求失败（${upstream.status}）`
+        const message = data?.error?.message || `${providerName} 服务请求失败（${upstream.status}）`
         sendFailure(upstream.status === 401 ? 401 : 502, message)
         return
       }
 
       if (upstream.finishReason === 'length') {
-        sendFailure(502, `AI 输出超过 ${maxTokens} tokens 上限被截断，请缩短产品卖点后重试`)
+        sendFailure(502, `AI 输出超过 ${maxTokens} tokens 上限被截断（含推理消耗），请缩短产品卖点或调高 LLM_MAX_TOKENS 后重试`)
         return
       }
 
       if (!upstream.outputText) {
-        sendFailure(502, 'DeepSeek 未返回可用的方案内容，请重试')
+        sendFailure(502, `${providerName} 未返回可用的方案内容，请重试`)
         return
       }
 
@@ -406,7 +436,7 @@ export function createAiProxyHandler(env = {}) {
     } catch (error) {
       const status = error.statusCode || 500
       if (status >= 500) console.error('[GoLocal AI]', error.message)
-      sendFailure(status, error.message || 'DeepSeek 方案生成失败，请稍后重试')
+      sendFailure(status, error.message || 'AI 方案生成失败，请稍后重试')
     }
   }
 }
