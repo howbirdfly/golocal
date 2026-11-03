@@ -1,0 +1,33 @@
+/* ============================================================
+   基础样式与重置
+   ============================================================ */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* ---------- 共享工具类 ---------- */
+/* 表单与结果面板共用的小号说明文字 */
+.bottom-note {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #87938b;
+  margin-top: 14px;
+}

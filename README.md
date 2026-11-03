@@ -42,12 +42,24 @@ npm run preview
 ├── src/
 │   ├── main.js             # 应用入口
 │   ├── App.vue             # 根组件（状态管理与生成逻辑）
-│   ├── style.css           # 全局样式
+│   ├── styles/             # 全局样式分层
+│   │   ├── index.css       # 样式入口（只做汇总）
+│   │   ├── variables.css   # 设计变量（颜色 / 圆角 / 阴影）
+│   │   ├── base.css        # 重置与共享工具类
+│   │   └── layout.css      # 页面骨架：导航 / Hero / 栅格 / 页脚
 │   ├── data/markets.js     # 市场规则数据（日/美/泰）
 │   └── components/         # TopBar / HeroSection / GeneratorForm / ResultPanel / Toast
+│                           # （组件自身的样式写在各自的 <style scoped> 中）
 ├── index-legacy.html       # 原始裸前端版本（存档参考）
 └── vite.config.js
 ```
+
+## 样式组织约定
+
+- `variables.css` 是所有颜色、圆角、阴影的唯一来源，组件层只消费变量，不回写全局
+- `base.css` 放重置和跨组件复用的工具类（如 `.bottom-note`）
+- `layout.css` 只放页面骨架与布局，不含任何具体组件的内部 UI
+- 组件内部样式写在 `<style scoped>`，天然隔离，避免类名冲突
 
 ## 技术说明
 

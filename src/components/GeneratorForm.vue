@@ -80,3 +80,167 @@ function onGenerate() {
     <div class="bottom-note">提示：本演示版使用内置规则与文案模板生成结果，不调用外部 AI 服务，不上传输入内容。</div>
   </aside>
 </template>
+
+<style scoped>
+.form-panel {
+  padding: 23px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.panel-head h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.step {
+  font-size: 11px;
+  color: var(--green);
+  background: var(--green2);
+  padding: 6px 10px;
+  border-radius: 30px;
+  font-weight: 800;
+}
+
+/* ---------- 字段 ---------- */
+.field {
+  margin-bottom: 18px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 750;
+  margin-bottom: 9px;
+}
+
+.hint {
+  font-size: 11px;
+  color: #8a968f;
+  font-weight: 400;
+  margin-left: 5px;
+}
+
+/* ---------- 市场选择 ---------- */
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.market {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  padding: 11px 6px;
+  text-align: center;
+  transition: 0.18s;
+  color: var(--ink);
+}
+
+.market:hover {
+  border-color: #8bb7a0;
+  transform: translateY(-1px);
+}
+
+.market.active {
+  border: 2px solid var(--green);
+  background: #f1f8f3;
+  padding: 10px 5px;
+}
+
+.flag {
+  font-size: 25px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.market b {
+  font-size: 12px;
+  display: block;
+}
+
+.market small {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* ---------- 输入控件 ---------- */
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid #dfe6e0;
+  border-radius: 11px;
+  padding: 12px 13px;
+  background: #fbfcfb;
+  color: var(--ink);
+  outline: none;
+  font-size: 13px;
+  transition: 0.15s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #6fa68a;
+  box-shadow: 0 0 0 3px #e7f3eb;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 75px;
+  line-height: 1.6;
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ---------- 按钮 ---------- */
+.primary {
+  width: 100%;
+  border: 0;
+  background: var(--green);
+  color: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 8px 18px #176b5225;
+  transition: 0.18s;
+}
+
+.primary:hover {
+  background: #105840;
+  transform: translateY(-1px);
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 520px) {
+  .form-panel {
+    padding: 17px;
+  }
+
+  .two {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

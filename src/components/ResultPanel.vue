@@ -55,3 +55,217 @@ function copy(text) {
     </div>
   </section>
 </template>
+
+<style scoped>
+.result-panel {
+  padding: 23px;
+  min-height: 500px;
+}
+
+/* ---------- 头部 ---------- */
+.result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.result-head h2 {
+  font-size: 18px;
+  margin: 0 0 5px;
+}
+
+.result-head p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.tag {
+  font-size: 10px;
+  background: #f0f4ef;
+  color: #63746a;
+  padding: 7px 10px;
+  border-radius: 30px;
+  white-space: nowrap;
+}
+
+/* ---------- 空状态 ---------- */
+.empty {
+  min-height: 370px;
+  border: 1px dashed #d5ded6;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 25px;
+  color: var(--muted);
+}
+
+.empty-icon {
+  width: 66px;
+  height: 66px;
+  border-radius: 22px;
+  background: #eef5ef;
+  display: grid;
+  place-items: center;
+  font-size: 31px;
+  margin-bottom: 14px;
+}
+
+.empty b {
+  color: var(--ink);
+  font-size: 15px;
+  margin-bottom: 7px;
+}
+
+.empty p {
+  font-size: 12px;
+  line-height: 1.8;
+  max-width: 310px;
+  margin: 0;
+}
+
+/* ---------- 结果内容 ---------- */
+.results {
+  display: none;
+}
+
+.results.show {
+  display: block;
+}
+
+.result-banner {
+  background: #eff6ef;
+  border-radius: 15px;
+  padding: 15px 17px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.result-banner strong {
+  font-size: 14px;
+}
+
+.result-banner span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.result-section {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.sec-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sec-title b {
+  font-size: 13px;
+}
+
+.sec-title small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.copy {
+  border: 0;
+  background: #edf5ef;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+
+.copy:hover {
+  background: #dceee1;
+}
+
+.copy-text {
+  font-size: 13px;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  color: #35443b;
+}
+
+.localized {
+  background: #f8faf8;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.localized .lang {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+/* ---------- 风险提示 ---------- */
+.risk-list {
+  display: grid;
+  gap: 9px;
+}
+
+.risk {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #46544b;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e4a24d;
+  flex: none;
+  margin-top: 7px;
+}
+
+/* ---------- 适配建议 ---------- */
+.tip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.tip {
+  background: #f7f9f7;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #58665d;
+}
+
+.tip b {
+  display: block;
+  color: #26372d;
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 520px) {
+  .result-panel {
+    padding: 17px;
+  }
+}
+</style>
